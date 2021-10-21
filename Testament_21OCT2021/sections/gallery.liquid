@@ -1,0 +1,332 @@
+{%- liquid
+
+  if section.settings.no_top_margin
+    assign ntm = true
+  endif
+
+-%}
+
+<section class="global__section gallery__image-section{% if ntm %} mt0{% endif %}" data-section-id="{{ section.id }}" >
+{% if section.settings.full_width %}<div class="gridlock-fluid"><div class="row">{% endif %}
+  <div class="row grid__wrapper">
+
+    {% for block in section.blocks %}
+
+      {%- liquid
+        case block.settings.image_width
+          when '25%'
+            assign image_size = '600x'
+            assign image_width = 'span-3'
+          when '33%'
+            assign image_size = '600x'
+            assign image_width = 'span-4'
+          when '50%'
+            assign image_size = '800x'
+            assign image_width = 'span-6'
+          when '66%'
+            assign image_size = '1200x'
+            assign image_width = 'span-8'
+          when '75%'
+            assign image_size = '1200x'
+            assign image_width = 'span-9'
+          when '100%'
+            assign image_size = '1920x'
+            assign image_width = 'span-12'
+        endcase
+
+        assign has_image = false
+        assign has_link = false
+
+        if block.settings.image != blank
+          assign has_image = true
+          assign img_url = block.settings.image | img_url: image_size
+        endif
+
+        if block.settings.link != blank
+          assign has_link = true
+        endif
+
+      -%}
+
+      <div class="gallery__item{% if block.settings.text_position == 'on_image' %} floating__text{% endif %} {{ image_width }} sm-span-12 auto item-{{ block.id }}" {{ block.shopify_attributes }}>
+        <div class="gallery__item-container">
+            {% if has_link %}<a href="{{ block.settings.link }}">{% endif %}
+            {% if has_image %}
+              <div class="gallery__item-image{% if block.settings.overlay %} overlay{% endif %}">
+              {% render 'basic-responsive-image',
+                type: block.settings.image,
+                data_widths: '[180, 360, 540, 720, 900, 1080, 1296, 1512]' %}
+              <noscript>
+                <img src="{{ block.settings.image | img_url: '1024x' }}" alt="{{ block.settings.image.alt }}">
+              </noscript>
+              </div>
+            {% else %}
+              <div class="onboard">
+              {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+              </div>
+            {% endif %}
+            {% if has_link %}</a>{% endif %}
+            <div class="gallery__item-caption rte">
+              {% if block.settings.title_text != blank %}
+                <h3>{{ block.settings.title_text | escape }}</h3>
+              {% endif %}
+              {% if block.settings.hidden_text != blank %}
+                {{ block.settings.hidden_text }}
+              {% endif %}
+            </div>
+        </div>
+        <style>
+          .gallery__item.item-{{ block.id }} .gallery__item-caption {
+            text-align: {{ block.settings.text_align }};
+          }
+          .gallery__item.item-{{ block.id }} .gallery__item-container h3,
+          .gallery__item.item-{{ block.id }} .gallery__item-container p,
+          .gallery__item.item-{{ block.id }} .gallery__item-container a {
+            color: {{ block.settings.text_color }};
+          }
+          {% if block.settings.text_position == 'on_image' %}
+          .gallery__item.floating__text.item-{{ block.id }} .gallery__item-container .gallery__item-caption,
+          .gallery__item.floating__text.item-{{ block.id }} .gallery__item-container .gallery__item-caption > a {
+            position: absolute;
+            top: {{ block.settings.caption_vertical }}%;
+            left: {{ block.settings.caption_horizontal }}%;
+            -webkit-transform: translate(-{{ block.settings.caption_horizontal }}%, -{{ block.settings.caption_vertical }}%);
+            -ms-transform: translate(-{{ block.settings.caption_horizontal }}%, -{{ block.settings.caption_vertical }}%);
+            -moz-transform: translate(-{{ block.settings.caption_horizontal }}%, -{{ block.settings.caption_vertical }}%);
+            -o-transform: translate(-{{ block.settings.caption_horizontal }}%, -{{ block.settings.caption_vertical }}%);
+            transform: translate(-{{ block.settings.caption_horizontal }}%, -{{ block.settings.caption_vertical }}%);
+          }
+          {% endif %}
+        </style>
+      </div>
+
+      {% if section.blocks.size == 0 %}
+        {% render 'no-blocks' %}
+      {% endif %}
+    {% endfor %}
+
+  </div>
+  {% if section.settings.full_width %}</div></div>{% endif %}
+  <style>
+    #shopify-section-{{ section.id }} .gallery__item .gallery__item-container h3 {
+      font-size: {{ section.settings.promo_size }}px;
+    }
+    #shopify-section-{{ section.id }} .gallery__item .gallery__item-container p {
+      font-size: {{ section.settings.hidden_size }}px;
+    }
+    #shopify-section-{{ section.id }} .gallery__item > a {
+      display: inline-block;
+      width: 100%;
+      padding: {{ settings.focus_border_weight }}px;
+    }
+    #shopify-section-{{ section.id }} .gridlock-fluid .row .row.grid__wrapper {
+      max-width: 102.08333333%;
+    }
+  </style>
+</section>
+<div class="clear"></div>
+
+
+{% schema %}
+{
+  "name": "Image gallery",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "no_top_margin",
+      "label": "No top margin",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "promo_size",
+      "min": 12,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 22
+    },
+    {
+      "type": "range",
+      "id": "hidden_size",
+      "min": 12,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Subheading size",
+      "default": 14
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "800px x 600px recommended if 3 per row"
+        },
+        {
+          "type": "checkbox",
+          "id": "overlay",
+          "label": "Add image overlay",
+          "info": "This can help with text contrast"
+        },
+        {
+          "type": "select",
+          "id": "image_width",
+          "label": "Image width",
+          "default": "33%",
+          "options": [
+            {
+              "value": "25%",
+              "label": "25%"
+            },
+            {
+              "value": "33%",
+              "label": "33%"
+            },
+            {
+              "value": "50%",
+              "label": "50%"
+            },
+            {
+              "value": "66%",
+              "label": "66%"
+            },
+            {
+              "value": "75%",
+              "label": "75%"
+            },
+            {
+              "value": "100%",
+              "label": "100%"
+            }
+          ]
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        },
+        {
+          "type": "header",
+          "content": "Content"
+        },
+        {
+          "type": "text",
+          "id": "title_text",
+          "label": "Heading",
+          "default": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "hidden_text",
+          "label": "Subheading",
+          "default": "<p>Subheading</p>"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text color",
+          "default": "#000000"
+        },
+        {
+          "type": "select",
+          "id": "text_position",
+          "default": "on_image",
+          "options": [
+            {
+              "value": "on_image",
+              "label": "Over image"
+            },
+            {
+              "value": "below_image",
+              "label": "Below image"
+            }
+          ],
+          "label": "Text position"
+        },
+        {
+          "type": "range",
+          "id": "caption_vertical",
+          "min": 0,
+          "max": 100,
+          "step": 2,
+          "unit": "%",
+          "label": "Text over image vertical position",
+          "default": 80
+        },
+        {
+          "type": "range",
+          "id": "caption_horizontal",
+          "min": 0,
+          "max": 100,
+          "step": 2,
+          "unit": "%",
+          "label": "Text over image horizontal position",
+          "default": 50
+        },
+        {
+          "type": "select",
+          "id": "text_align",
+          "label": "Text alignment",
+          "default": "center",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Centered"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image gallery",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        }
+      ]
+    }
+  ],
+  "templates": [
+    "404",
+    "article",
+    "blog",
+    "cart",
+    "collection",
+    "list-collections",
+    "index",
+    "page",
+    "product",
+    "search"
+  ]
+}
+{% endschema %}

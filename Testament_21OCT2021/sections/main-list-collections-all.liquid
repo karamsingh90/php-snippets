@@ -1,0 +1,86 @@
+{%- liquid
+
+  assign grid = section.settings.grid
+    case section.settings.grid
+      when 2
+    assign prod_grid = 50
+      when 3
+    assign prod_grid = 33.333
+      when 4
+    assign prod_grid = 25
+  endcase
+
+  if section.settings.title_position == 'floating'
+    assign is_floating = true
+  endif
+
+-%}
+
+<section class="collection__list-section main__section" data-section-id="{{ section.id }}" data-section-type="collection-list">
+
+  <div class="collection__list-container row">
+      {% paginate collections by 48 %}
+        {% if collections.size > 0 %}
+          <div class="collection__list-loop">
+            {% for collection in collections %}
+            <div class="collection__list-item{% if is_floating %} floating__title{% endif %}" data-alpha="{{ collection.title }}" {{ block.shopify_attributes }}>
+              {% render 'collection-grid-item', collection: collection %}
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>{{ 'collections.general.no_matches' | t }}</p>
+        {% endif %}
+        {% if collections.size > 48 %}
+          {% render 'pagination', paginate: paginate %}
+        {% endif %}
+      {% endpaginate %}
+  </div>
+
+  <style>
+    .collection__list-loop {
+      grid-template-columns: repeat({{ grid }}, 1fr);
+    }
+  </style>
+</section>
+
+{% schema %}
+{
+  "name": "All Collections",
+  "settings": [
+    {
+      "type": "range",
+      "id": "grid",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "label": "Collections per row",
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "title_position",
+      "label": "Collection title position",
+      "options": [
+        {
+          "value": "below",
+          "label": "Below image"
+        },
+        {
+          "value": "floating",
+          "label": "Floating on image"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "collection_count",
+      "label": "Show product count"
+    },
+    {
+      "type": "paragraph",
+      "content": "Choose a collection list section to select specific collections in a preferred order"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,18 @@
+<section class="404__section main__section" data-section-id="{{ section.id }}">
+  <div class="row">
+    <div id="page" class="desktop-12 tablet-6 mobile-3">
+      <h1 class="page-title">{{ 'general.404.title' | t }}</h1>
+      <span class="subtext">{{ 'general.404.subtext' | t }}</span>
+      <div id="search-bar">
+        <form action="/search" method="get">
+          <h3>{{ 'general.search.title' | t }}</h3>
+          <input type="text" name="q" id="q" placeholder="{{ 'general.search.placeholder' | t }}" />
+          {% if settings.search_show_products_only %}
+            <input type="hidden" name="type" value="product">
+          {% endif %}
+        </form>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</section>

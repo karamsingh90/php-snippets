@@ -1,0 +1,236 @@
+<a class="collection__sidebar-mobile-trigger js-collection-side-toggle" href="#" title="Click to toggle sidebar">
+  {% render 'snip-icons',
+     wrapper: '.slideout__trigger-mobile-menu',
+     type: 'testament-theme',
+     icon: 'menu-bars',
+     classes: 'slideout__trigger-mobile-menu--icon vib-center',
+     size: '10px',
+     fill: 'var(--text-color)',
+     hover: 'var(--text-color)' %}
+  <span class="vib-center">{{ 'sections.collection_template.refine' | t }}</span>
+</a>
+<div class="collection__page-sidebar" id="sidebar">
+
+  {% for block in section.blocks %}
+      {% if block.type == 'menu' %}
+        <h4>{{ block.settings.title | escape }}</h4>
+        <ul class="collection__sidebar-menu" {{ block.shopify_attributes }}>
+          {% for link in linklists[block.settings.side_nav].links %}
+            {% if link.links != blank %}
+              <li><a href="{{ link.url }}"{% if sub_link.current %} class="current"{% endif %}>{{ link.title }}</a>
+                <ul class="nested">
+                  {% for sub_link in link.links %}
+                    <li><a href="{{ sub_link.url }}"{% if sub_link.current %} class="current"{% endif %}>{{ sub_link.title }}</a></li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% else %}
+              <li><a href="{{ link.url }}"{% if sub_link.current %} class="current"{% endif %}>{{ link.title }}</a></li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% elsif block.type == 'text' %}
+        <h4>{{ block.settings.title | escape }}</h4>
+        <div class="clearfix filter">
+          <div class="rte">
+            {{ block.settings.sidebar_text }}
+          </div>
+        </div>
+      {% elsif block.type == 'image' %}
+        {% if block.settings.image != blank %}
+          <div class="clearfix filter">
+            {% if block.settings.link != blank %}<a href="{{ block.settings.link }}">{% endif %}
+              {% render 'basic-responsive-image', type: block.settings.image, data_widths: '[180, 360, 540]' %}
+            {% if block.settings.link != blank %}</a>{% endif %}
+          </div>
+        {% endif %}
+      {% elsif block.type == 'side_filter' %}
+        {%- for filter in collection.filters -%}
+          {%- assign total_active_values = total_active_values | plus: filter.active_values.size -%}
+            {% case filter.type %}
+              {% when 'list' %}
+                {%- liquid
+
+                  assign is_size_filter = false
+                  assign is_color_filter = false
+                  assign filter_label_to_lowercase = filter.label | downcase
+
+                  if filter_label_to_lowercase contains "color"
+                    assign is_color_filter = true
+                  elsif filter_label_to_lowercase contains "colour"
+                    assign is_color_filter = true
+                  elsif filter_label_to_lowercase contains "size"
+                    assign is_size_filter = true
+                  endif
+
+                  if is_color_filter
+                    assign filter_type = 'color'
+                  elsif is_size_filter
+                    assign filter_type = 'size'
+                  else
+                    assign filter_type = 'regular'
+                  endif
+
+                -%}
+                <div class="clearfix filter filter--{{ filter_type }}">
+                  <h4>{{ filter.label | escape }}</h4>
+                  <ul>
+                    {% for value in filter.values %}
+
+                      {%- liquid
+
+                        for product in collection.products
+                          unless is_color_filter
+                            continue
+                          endunless
+
+                          for option in product.options_with_values
+                            assign option_name = option.name | downcase
+
+                            unless option_name contains "color" or option_name contains "colour"
+                              continue
+                            endunless
+
+                            assign variant_img_url = null
+                            assign swatch_color_name = value.label | handleize | downcase | append: '.png'
+                            assign swatch_image_url = swatch_color_name | file_url
+                            assign css_color = value.label | split: ' ' | last | downcase
+
+                            if images[swatch_color_name] != blank
+                              assign bg_img = 'background-image:url(' | append:  swatch_image_url | append: ');'
+                            else
+                              assign bg_img = ''
+                            endif
+                            assign bg_color = 'background-color:' | append:  css_color | append: ';'
+
+                          endfor
+                        endfor
+
+                        if value.active
+                          assign status = 'current'
+                          assign url = value.url_to_remove
+                        elsif value.count == 0 and value.active == false
+                          assign status = 'disabled'
+                          assign url = ''
+                        else
+                          assign status = ''
+                          assign url = value.url_to_add
+                        endif
+                      -%}
+
+                      <li class="{{ status }}">
+                        {% if is_color_filter %}
+                          <a class="js-collection-side-filter {{ status }} checkbox-wrapper" href="{{ url }}" title="{{ value.label }}">
+                            <input type="checkbox"
+                               name="{{ value.param_name }}"
+                               value="{{ value.value }}"
+                               {% if value.active %}checked{% endif %}
+                               {% if value.count == 0 and value.active == false %}disabled{% endif%} >
+                            <div class="checkbox-indicator"></div>
+                            <span class="color-filter color-filter--rounded color-filter--{{ status }} {{ status }}" style="{{ bg_color }}{{ bg_img }}"></span>
+                            <span class="color-filter--label">{{ value.label | escape }}</span> <span class="filter__count">({{ value.count }})</span>
+                          </a>
+                        {% else %}
+                          <a class="js-collection-side-filter {{ status }} checkbox-wrapper" data-tag="{{ url }}" href="{{ url }}">
+                            <input type="checkbox"
+                               name="{{ value.param_name }}"
+                               value="{{ value.value }}"
+                               {% if value.active %}checked{% endif %}
+                               {% if value.count == 0 and value.active == false %}disabled{% endif%} >
+                            <div class="checkbox-indicator"></div>
+                            {{ value.label | escape }} <span class="filter__count">({{ value.count }})</span>
+                          </a>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% when 'price_range' %}
+                {%- liquid
+                  assign currencies_using_comma_decimals = "ANG,ARS,BRL,BYN,BYR,CLF,CLP,COP,CRC,CZK,DKK,EUR,HRK,HUF,IDR,ISK,MZN,NOK,PLN,RON,RUB,SEK,TRY,UYU,VES,VND" | split: ','
+                  assign uses_comma_decimals = false
+
+                  if currencies_using_comma_decimals contains cart.currency.iso_code
+                    assign uses_comma_decimals = true
+                  endif
+                -%}
+
+                <div class="sidebar-filter filter--price-range" data-collection-filters-price-range>
+                  <h4>{{ filter.label | escape }}</h4>
+                  <div class="filter-range__boxes js-price-range">
+                    <div class="filter-range__field">
+                      <label class="filter-range__field__label visually-hidden" for="Filter-{{ filter.label | escape }}-{{ forloop.index }}">{{ 'sections.collection_template.from' | t }}</label>
+                      <span class="filter-range__field__currency">{{ cart.currency.symbol }}</span>
+                      <input class="filter-range__field__input js-filter-range-input js-price-min-output"
+                        name="{{ filter.min_value.param_name }}"
+                        id="Filter-{{ filter.label | escape }}-{{ forloop.index }}"
+                        {%- if filter.min_value.value -%}
+                          {%- if uses_comma_decimals -%}
+                            value="{{ filter.min_value.value | money_without_currency | replace: '.', '' | replace: ',', '.' }}"
+                          {%- else -%}
+                            value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                          {% endif %}
+                        {%- endif -%}
+                        type="number"
+                        placeholder="{{ 'sections.collection_template.from' | t }}"
+                        min="0"
+                        max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                      </input>
+                    </div>
+                    <div class="filter-range__field">
+                      <label class="filter-range__field__label visually-hidden" for="Filter-{{ filter.label | escape }}-{{ forloop.index }}">{{ 'sections.collection_template.to' | t }}</label>
+                      <span class="filter-range__field__currency">{{ cart.currency.symbol }}</span>
+                      <input class="filter-range__field__input js-filter-range-input js-price-max-output"
+                        name="{{ filter.max_value.param_name }}"
+                        id="Filter-{{ filter.label | escape }}-{{ forloop.index }}"
+                        {%- if filter.max_value.value -%}
+                          {%- if uses_comma_decimals -%}
+                            value="{{ filter.max_value.value | money_without_currency | replace: '.', '' | replace: ',', '.' }}"
+                          {%- else -%}
+                            value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                          {% endif %}
+                        {%- endif -%}
+                        type="number"
+                        placeholder="{{ 'sections.collection_template.to' | t }}"
+                        min="0"
+                        max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                      </input>
+                    </div>
+
+                    <div class="filter-range__slider--wrapper span-2 auto">
+                      <input class="filter-range__slider--input"
+                        {%- if filter.min_value.value -%}
+                          {%- if uses_comma_decimals -%}
+                            value="{{ filter.min_value.value | money_without_currency | replace: '.', '' | replace: ',', '.' }}"
+                          {%- else -%}
+                            value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                          {% endif %}
+                        {%- else -%}
+                          value="0"
+                        {%- endif -%}
+                        min="0"
+                        max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                        step="10.00"
+                        type="range"/>
+                      <input class="filter-range__slider--input"
+                        {%- if filter.max_value.value -%}
+                          {%- if uses_comma_decimals -%}
+                            value="{{ filter.max_value.value | money_without_currency | replace: '.', '' | replace: ',', '.' }}"
+                          {%- else -%}
+                            value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                          {% endif %}
+                        {%- else -%}
+                          value="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                        {%- endif -%}
+                        min="0"
+                        max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                        step="10.00"
+                        type="range"/>
+                    </div>
+                  </div>
+                </div>
+              {% endcase %}
+        {% endfor %}
+    {% endif %}
+  {% endfor %}
+</div>

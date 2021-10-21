@@ -1,0 +1,237 @@
+{%- liquid
+
+  assign ntm = false
+  assign has_image = false
+  assign has title = false
+  assign has_text = false
+  assign has_link = false
+
+  if section.settings.no_top_margin
+    assign ntm = true
+  endif
+
+  if section.settings.image != blank
+    assign has_image = true
+    assign img_url = section.settings.image | img_url: image_size
+  endif
+
+  if section.settings.title != blank
+    assign has_title = true
+  endif
+
+  if section.settings.text != blank
+    assign has_text = true
+  endif
+
+  if section.settings.link != blank and section.settings.button_text != blank
+    assign has_link = true
+  endif
+
+  case section.settings.image_size
+    when 'medium'
+      assign grid = '6'
+    when 'large'
+      assign grid = '8'
+  endcase
+
+  assign offset = 12 | minus: grid
+
+-%}
+
+<section class="image__with-textSection section-{{ section.id }} global__section pb0" data-section-id="{{ section.id }}">
+
+    <div class="row grid__wrapper image__withText-wrapper">
+      <div class="image__with-textImage span-{{ grid }} image__size-{{ section.settings.image_size }} sm-span-12 auto">
+        {%- if has_image -%}
+          {% render 'basic-responsive-image', type: section.settings.image, data_widths: '[180, 360, 540, 720, 900, 1080, 1296]' %}
+          <noscript>
+            <img src="{{ section.settings.image | img_url: '800x' }}" alt="{{ section.settings.image.alt }}">
+          </noscript>
+        {%- else -%}
+          <div class="onboard">
+          {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="image__with-textCaption {% if section.settings.center_align %} center{% endif %} span-{{ offset }} sm-span-12 auto">
+        {%- if has_title -%}
+          <h3>{{ section.settings.title | escape }}</h3>
+        {%- endif -%}
+        {%- if has_text -%}
+          <div class="rte">
+            {{ section.settings.text }}
+          </div>
+        {%- endif -%}
+        {%- if has_link -%}
+          <div class="image__with-textCaption-btn-wrapper">
+            <a href="{{ section.settings.link }}">{{ section.settings.button_text | escape }}</a>
+          </div>
+        {%- endif -%}
+      </div>
+  </div>
+
+
+  <style>
+    {%- if section.settings.image_position == 'right' -%}
+      @media screen and (min-width: 741px) {
+        .image__with-textSection.section-{{ section.id }} .image__with-textImage {
+          order: 2;
+          grid-column-start: {{ offset | plus: 1 }};
+        }
+        .image__with-textSection.section-{{ section.id }} .image__with-textCaption {
+          order: 1;
+          grid-column-start: 1;
+        }
+      }
+    {%- endif -%}
+
+    .image__with-textSection.section-{{ section.id }} {
+      background: {{ section.settings.background_color }};
+    }
+
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption h3,
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption .rte p,
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption .rte a {
+      color: {{ section.settings.text_color }};
+    }
+
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption-btn-wrapper a,
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption-btn-wrapper a:visited {
+      color: {{ section.settings.text_color }} !important;
+      background: {{ section.settings.background_color }} !important;
+      border: 1px solid {{ section.settings.text_color }} !important;
+    }
+
+    .image__with-textSection.section-{{ section.id }} .image__with-textCaption-btn-wrapper a:hover {
+      color: {{ section.settings.background_color }} !important;
+      background: {{ section.settings.text_color }} !important;
+    }
+
+    .image__with-textImage {
+      {%- if section.settings.image_position == 'left' -%}
+      margin-left: -15px;
+      {%- else -%}
+      margin-right: -15px;
+      {%- endif -%}
+    }
+
+  </style>
+
+</section>
+
+<div class="clear"></div>
+
+
+{% schema %}
+{
+  "name": "Image with text",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image",
+      "info": "800px x 800px recommended"
+    },
+    {
+      "type": "radio",
+      "id": "image_position",
+      "label": "Image position",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "radio",
+      "id": "image_size",
+      "label": "Image size",
+      "options": [
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Our collections"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Add text with images to give and content and editorial feel. Drive traffic to key areas of your store</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button",
+      "default": "Button"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link",
+      "info": "Optional"
+    },
+    {
+      "type": "checkbox",
+      "id": "center_align",
+      "label": "Center align text",
+      "default": false
+    },
+    {
+      "type":"color",
+      "id":"text_color",
+      "label":"Text color",
+      "default":"#000000"
+    },
+    {
+      "type":"color",
+      "id":"background_color",
+      "label":"Background color",
+      "default":"#f7f7f7"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image with text"
+    }
+  ],
+  "templates": [
+    "404",
+    "article",
+    "blog",
+    "cart",
+    "collection",
+    "list-collections",
+    "index",
+    "page",
+    "product",
+    "search"
+  ]
+}
+{% endschema %}

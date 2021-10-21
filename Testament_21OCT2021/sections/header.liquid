@@ -1,0 +1,312 @@
+{%- liquid
+
+  assign nav_full = false
+  assign nav_inline = false
+
+  case section.settings.nav_style
+    when 'full'
+      assign nav_full = true
+    when 'inline'
+      assign nav_inline = true
+    when 'inline-center'
+      assign nav_inline_center = true
+  endcase
+
+-%}
+
+{% capture logo %}
+<div id="logo"{% if nav_full %} class="desktop-12 tablet-6 mobile-3"{% endif %}>
+  {% if section.settings.logo != blank %}
+  {%- assign image_size = '600x' -%}
+  <a href="{{ routes.root_url }}">
+    <img src="{{ section.settings.logo | img_url: image_size }}" alt="{{ section.settings.logo.alt | default: shop.name }}" itemprop="logo">
+  </a>
+  {% else %}
+  <a href="{{ routes.root_url }}">{{ shop.name }}</a>
+  {% endif %}
+</div>
+{% endcapture %}
+
+<div class="header-section {% if nav_full %}nav__option-full{% else %}nav__option-inline{% endif %} js-header" data-section-id="{{ section.id }}" data-section-type="header-section">
+  <div class="mobile__header grid__wrapper desktop-hide js-mobile-header-wrapper">
+    <div class="mobile-menu__trigger span-3 auto v-center">
+      <div class="slideout__trigger--open text-left">
+        <button class="slideout__trigger-mobile-menu js-slideout-open" data-wau-slideout-target="mobile-navigation" data-slideout-direction="left" aria-label="Open navigation" tabindex="0" type="button" name="button">
+          {% render 'snip-icons',
+             wrapper: '.slideout__trigger-mobile-menu',
+             type: 'testament-theme',
+             icon: 'menu-bars',
+             classes: 'slideout__trigger-mobile-menu--icon vib-center',
+             size: '18px',
+             fill: 'var(--mobile-header-icons)',
+             hover: 'var(--mobile-header-icons)' %}
+        </button>
+      </div>
+    </div>
+    <div class="mobile-menu__logo span-6 auto v-center a-center">
+      {% if section.settings.logo != blank %}
+      {%- assign image_size = '500x' -%}
+      <a href="{{ routes.root_url }}"><img src="{{ section.settings.logo | img_url: image_size }}" alt="{{ section.settings.logo.alt | default: shop.name }}" itemprop="logo"></a>
+      {% else %}
+      <a href="{{ routes.root_url }}">{{ shop.name }}</a>
+      {% endif %}
+    </div>
+    <div class="mobile-menu__cart-link my-cart-link-container span-3 auto v-center">
+      {% if settings.cart_type == 'page_only' %}
+        <a href="{{ routes.cart_url }}">
+          {% render 'snip-icons',
+             wrapper: '.mobile-menu__cart-link',
+             type: 'testament-theme',
+             icon: 'cart',
+             classes: 'cart--icon vib-center',
+             size: '18px',
+             fill: 'var(--mobile-header-icons)',
+             hover: 'var(--mobile-header-icons)' %}
+           {% render 'snip-icons',
+              wrapper: '.mobile-menu__cart-link',
+              type: 'testament-theme',
+              icon: 'bag',
+              classes: 'bag--icon vib-center',
+              size: '18px',
+              fill: 'var(--mobile-header-icons)',
+              hover: 'var(--mobile-header-icons)' %}
+          <span class="js-cart-count vib-center">{{ cart.item_count }}</span>
+        </a>
+      {% else %}
+        {%- if settings.cart_type == 'drawer' -%}
+          {% assign cart_classes = 'js-slideout-open' %}
+          {% assign cart_settings = 'data-wau-slideout-target="ajax-cart" data-slideout-direction="right"' %}
+        {% elsif settings.cart_type == 'modal_cart' %}
+          {% assign cart_classes = 'js-modal-open' %}
+          {% assign cart_settings = 'data-wau-modal-target="ajax-cart"' %}
+        {%- endif -%}
+        <div class="mobile-menu__cart-link slideout__trigger--open">
+          <button class="slideout__trigger-mobile-menu js-mini-cart-trigger {{ cart_classes }}" {{ cart_settings }} aria-label="Open cart" tabindex="0" type="button" name="button">
+            {% render 'snip-icons',
+               wrapper: '.mobile-menu__cart-link',
+               type: 'testament-theme',
+               icon: 'cart',
+               classes: 'cart--icon vib-center',
+               size: '18px',
+               fill: 'var(--mobile-header-icons)',
+               hover: 'var(--mobile-header-icons)' %}
+           {% render 'snip-icons',
+              wrapper: '.mobile-menu__cart-link',
+              type: 'testament-theme',
+              icon: 'bag',
+              classes: 'bag--icon vib-center',
+              size: '18px',
+              fill: 'var(--mobile-header-icons)',
+              hover: 'var(--mobile-header-icons)' %}
+            <span class="js-cart-count vib-center">{{ cart.item_count }}</span>
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="js-header-wrapper header-wrapper{% if nav_inline or nav_inline_center %} is_sticky{% endif %}">
+    {% if nav_full %}
+      <div class="row">
+        {{ logo }}
+      </div>
+    {% endif %}
+    <div class="clear"></div>
+    <nav aria-label="Primary Navigation" class="navigation js-navigation" data-sticky-class="navigation--sticky">
+      {% if nav_full == false %}
+				<div class="nav-inner-container{% if nav_inline %} nav_inline{% elsif nav_inline_center %} nav_inline_center{% endif %}">
+      {% endif %}
+      {% if nav_inline %}
+        {{ logo }}
+      {% endif %}
+        <ul role="menubar" aria-label="Primary Navigation" id="main-nav" class="navigation__menu {% if nav_full %} row{% endif %}">
+        	{% assign menu = linklists[section.settings.main_nav] %}
+          {% for link in menu.links %}
+            {% render 'navigation', link: link, menu: menu %}
+          {% endfor %}
+        </ul>
+        {% if nav_inline_center %}
+          {{ logo }}
+        {% endif %}
+      {% if nav_full == false %}
+    		</div>{% comment %} close nav-inner-container {% endcomment %}
+    	{% endif %}
+    </nav>
+    <div class="clear header-spacer"></div>
+  </div>
+  <style>
+    {% if section.settings.logo != blank %}
+      @media screen and ( min-width: 981px ) {
+        #logo img {
+          max-width: {{ section.settings.logo_max_width }}px;
+        }
+      }
+    {% endif %}
+		.navigation {
+			border-top: {{ section.settings.nav_top_border_height }}px solid var(--nav-border-color);
+			border-bottom: {{ section.settings.nav_bottom_border_height }}px solid var(--nav-border-color);
+		}
+		.navigation__menuitem {
+			line-height: {{ section.settings.nav_height }}px;
+		}
+		@media only screen and (min-width: 980px) {
+			.navigation--sticky.navigation + .header-spacer {
+				margin-top: {{ section.settings.nav_height }}px;
+			}
+		}
+		.dropdown,
+    .megamenu {
+			top: {{ section.settings.nav_height }}px;
+		}
+    {% if section.settings.full_width_header %}
+      ul.navigation__menu.row,
+      .nav-inner-container {
+          width: 98% !important;
+      }
+    {% endif %}
+
+    {% if nav_full == false %}
+      .header-section.nav__option-inline .nav-inner-container {
+        line-height: {{ section.settings.nav_height }}px;
+      }
+      .header-section.nav__option-inline #logo a img {
+        max-height: {{ section.settings.nav_height | minus: 10 }}px;
+      }
+    {% endif %}
+
+    {% unless section.settings.full_width_header %}
+    @media screen and (max-width: 980px) {
+        div#upper-content {
+          width: 100%;
+        }
+    }
+    {% endunless %}
+    @media screen and (max-width: 740px) {
+      .header-wrapper {
+					margin-top: 70px;
+      }
+    }
+		@media screen and (min-width: 740px and max-width: 980px) {
+			.header-wrapper {
+					margin-top: 70px;
+      }
+		}
+    @media screen and ( max-width: 980px ) {
+      .mobile-menu__logo img {
+        display: inline-block;
+        vertical-align: middle;
+      }
+    }
+  </style>
+
+</div>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "select",
+      "id": "nav_style",
+      "label": "Header layout",
+      "options": [
+        {
+          "value": "full",
+          "label": "Logo above navigation"
+        },
+        {
+          "value": "inline",
+          "label": "Inline, left logo"
+        },
+        {
+          "value": "inline-center",
+          "label": "Inline, center logo"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_width",
+      "min": 100,
+      "max": 600,
+      "step": 10,
+      "unit": "px",
+      "label": "Logo image width",
+      "default": 300,
+      "info": "When header layout is inline, the logo size will be limited to the navigation height. If you have a tall logo consider the logo above navigation option."
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "link_list",
+      "id": "main_nav",
+      "label": "Choose main menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "range",
+      "id": "nav_height",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Height",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "nav_top_border_height",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "label": "Top border size",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "nav_bottom_border_height",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "label": "Bottom border size",
+      "default": 1
+    }
+  ],
+  "blocks": [
+    {
+      "type": "mega_menu",
+      "name": "Mega dropdown",
+      "settings": [
+        {
+          "type": "text",
+          "id": "menu_item",
+          "label": "Menu item",
+          "info": "Enter navigation item to apply a mega dropdown"
+        },
+        {
+          "type": "image_picker",
+          "id": "nav_image",
+          "label": "Featured image"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,322 @@
+{%- liquid
+
+  assign hd_locale_selector = false
+  assign hd_currency_selector = false
+
+  if section.settings.show_currency_selector and shop.enabled_currencies.size > 1
+    assign hd_currency_selector = true
+  endif
+
+  if section.settings.show_locale_selector and shop.published_locales.size > 1
+    assign hd_locale_selector = true
+  endif
+
+  if section.settings.announcement_text != blank
+    assign announcement = true
+  endif
+
+  if section.settings.full_width_header
+    assign is_full_width = true
+  endif
+
+-%}
+
+
+<header class="announcement__bar-section js-top-bar" data-section-id="{{ section.id }}" data-section-type="announcement-bar-section">
+  {% if is_full_width %}
+  <div class="gridlock-fluid">
+    {% endif %}
+    <div class="grid__wrapper" id="upper-content">
+      {%- liquid
+
+        if announcement
+          assign social_grid = 'span-4 auto sm-hide v-center'
+        else
+          assign social_grid = 'span-6 auto sm-hide v-center'
+        endif
+
+      -%}
+      {% render 'social-icons',
+        wrapper: '.announcement__bar-section',
+        fill_color: 'var(--hello-color)',
+        hover_color: 'var(--hello-color)',
+        social_grid:  social_grid %}
+
+      {% if announcement %}
+        <div id="hello" class="span-4 auto sm-span-12 v-center">
+            {{ section.settings.announcement_text }}
+        </div>
+      {% endif %}
+      <ul class="cart-links__wrapper {% if announcement %}span-4 {% else %}span-6{% endif %} auto sm-hide v-center a-right">
+        <li class="seeks">
+            <button class="slideout__trigger-search js-slideout-open button-as-link"
+              data-wau-slideout-target="search-sidebar"
+              data-slideout-direction="right"
+              aria-label="Open Search"
+              tabindex="0"
+              type="button"
+              name="button">
+              {% render 'snip-icons',
+                 wrapper: '.search__toggle',
+                 type: 'testament-theme',
+                 icon: 'search',
+                 classes: 'vib-center',
+                 size: '14px',
+                 fill: 'var(--hello-color)',
+                 hover: 'var(--hello-color)' %}
+            </button>
+        </li>
+        {% if shop.customer_accounts_enabled %}
+          {% if customer  %}
+            <li class="cart-links__link-account cust">
+              <a href="{{ routes.account_url }}">
+                {% render 'snip-icons',
+                   wrapper: '.cart-links__link-account',
+                   type: 'testament-theme',
+                   icon: 'user',
+                   classes: 'cart-links__link-account--icon vib-center',
+                   size: '14px',
+                   fill: 'var(--hello-color)',
+                   hover: 'var(--hello-color)' %}
+              </a>
+            </li>
+            <li class="cart-links__link-logout cust">
+              <a href="{{ routes.account_logout_url }}">
+                {% render 'snip-icons',
+                   wrapper: '.cart-links__link-logout',
+                   type: 'testament-theme',
+                   icon: 'user-logout',
+                   classes: 'cart-links__link-logout--icon vib-center',
+                   size: '14px',
+                   fill: 'var(--hello-color)',
+                   hover: 'var(--hello-color)' %}
+              </a>
+              </li>
+          {% else %}
+            <li class="cart-links__link-account cust">
+              <a href="{{ routes.account_login_url }}">
+                {% render 'snip-icons',
+                   wrapper: '.cart-links__link-account',
+                   type: 'testament-theme',
+                   icon: 'user',
+                   classes: 'cart-links__link-account--icon vib-center',
+                   size: '14px',
+                   fill: 'var(--hello-color)',
+                   hover: 'var(--hello-color)' %}
+              </a>
+            </li>
+          {% endif %}
+        {% endif %}
+        {%- if hd_locale_selector -%}
+          <li class="lang-selector">
+            {%- form 'localization', class: 'selectors-form', data-disclosure-form: '' -%}
+              <div class="selectors-form__item">
+                <h4 class="visually-hidden" id="lang-heading">
+                  {{ 'general.language.dropdown_label' | t }}
+                </h4>
+
+                <div class="disclosure" data-disclosure-locale>
+                  <button type="button" class="disclosure__toggle vib-center" aria-expanded="false" aria-controls="lang-list" aria-describedby="lang-heading" data-disclosure-toggle>
+                    {{ form.current_locale.iso_code }}
+                  </button>
+                  <ul id="lang-list" class="disclosure-list" data-disclosure-list>
+                    {% for locale in form.available_locales %}
+                      <li class="disclosure-list__item {% if locale.iso_code == form.current_locale.iso_code %}disclosure-list__item--current{% endif %}">
+                        <a class="disclosure-list__option" href="#" title="{{ locale.endonym_name }}" lang="{{ locale.iso_code }}" {% if locale.iso_code == form.current_locale.iso_code %}aria-current="true"{% endif %} data-value="{{ locale.iso_code }}" data-disclosure-option>
+                          {{ locale.endonym_name }}
+                        </a>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                  <input type="hidden" name="locale_code" id="LocaleSelector" value="{{ form.current_locale.iso_code }}" data-disclosure-input/>
+                </div>
+              </div>
+            {%- endform -%}
+          </li>
+        {%- endif -%}
+        {%- if hd_currency_selector -%}
+          <li class="curr-selector">
+            {%- form 'localization', class: 'selectors-form', data-disclosure-form: '' -%}
+              <div class="selectors-form__item">
+                <h4 class="visually-hidden" id="currency-heading">
+                  {{ 'general.currency.dropdown_label' | t }}
+                </h4>
+
+                <div class="disclosure" data-disclosure-currency>
+                  <button type="button" class="disclosure__toggle vib-center" aria-expanded="false" aria-controls="currency-list" aria-describedby="currency-heading" data-disclosure-toggle>
+                    {{ form.current_currency.iso_code }} {%- if form.current_currency.symbol -%}{{ form.current_currency.symbol }}{%- endif -%}
+                  </button>
+                  <ul id="currency-list" class="disclosure-list" data-disclosure-list>
+                    {% for currency in form.available_currencies %}
+                      <li class="disclosure-list__item {% if currency.iso_code == form.current_currency.iso_code %}disclosure-list__item--current{% endif %}">
+                        <a class="disclosure-list__option" href="#" title="{{ currency.iso_code }}" {% if currency.iso_code == form.current_currency.iso_code %}aria-current="true"{% endif %} data-value="{{ currency.iso_code }}" data-disclosure-option>
+                          {{ currency.iso_code }} {%- if currency.symbol -%}{{ currency.symbol }}{%- endif -%}
+                        </a>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                  <input type="hidden" name="currency_code" id="HeaderCurrencySelector" value="{{ form.current_currency.iso_code }}" data-disclosure-input/>
+                </div>
+              </div>
+            {%- endform -%}
+          </li>
+        {%- endif -%}
+        {%- liquid
+
+          if section.settings.cart_icon == 'cart'
+            assign cart_icon = 'cart'
+          else
+            assign cart_icon = 'bag'
+          endif
+
+        -%}
+        <li class="cart-links__link-cart my-cart-link-container">
+          {% if settings.cart_type == 'page_only' %}
+            <a href="{{ routes.cart_url }}">
+              <span class="my-cart-text vib-center">{{ 'layout.header.my_cart' | t }}&nbsp; </span>
+              {% render 'snip-icons',
+                 wrapper: '.cart-links__link-cart',
+                 type: 'testament-theme',
+                 icon: cart_icon,
+                 classes: 'cart-links__link-cart--icon vib-center',
+                 size: '14px',
+                 fill: 'var(--hello-color)',
+                 hover: 'var(--hello-color)' %}
+              <span class="js-cart-count vib-center">{{ cart.item_count }}</span>
+            </a>
+          {% else %}
+            {%- if settings.cart_type == 'drawer' -%}
+              {% assign cart_classes = 'js-slideout-open' %}
+              {% assign cart_settings = 'data-wau-slideout-target="ajax-cart" data-slideout-direction="right"' %}
+            {% elsif settings.cart_type == 'modal_cart' %}
+              {% assign cart_classes = 'js-modal-open' %}
+              {% assign cart_settings = 'data-wau-modal-target="ajax-cart"' %}
+            {%- endif -%}
+            <a class="slideout__trigger--open" href="{{ routes.cart_url }}" tabindex="-1">
+              <button class="slideout__trigger-mobile-menu js-mini-cart-trigger {{ cart_classes }}" {{ cart_settings }} aria-label="Open cart" tabindex="0" type="button" name="button">
+                <span class="my-cart-text vib-center">{{ 'layout.header.my_cart' | t }}&nbsp; </span>
+                {% render 'snip-icons',
+                   wrapper: '.cart-links__link-cart',
+                   type: 'testament-theme',
+                   icon: cart_icon,
+                   classes: 'cart-links__link-cart--icon vib-center',
+                   size: '14px',
+                   fill: 'var(--hello-color)',
+                   hover: 'var(--hello-color)' %}
+                <span class="js-cart-count vib-center">{{ cart.item_count }}</span>
+              </button>
+            </a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+    {% if is_full_width %}
+  </div>
+  {% endif %}
+
+  <style>
+    {% if section.settings.logo != blank %}
+      @media screen and ( min-width: 740px ) {
+        #logo img { max-width: {{ section.settings.logo_max_width }}px; }
+      }
+    {% endif %}
+    .announcement__bar-section .gridlock-fluid .grid__wrapper {
+      max-width: 100%;
+    }
+    #hello p,
+    ul#cart li a,
+    ul#cart li span {
+      font-size: {{ section.settings.announcement_text_size }}px;
+      margin-bottom: 0;
+    }
+    ul#cart li a.disclosure-list__option {
+      font-size: var(--font-size);
+    }
+    {%- if section.settings.cart_icon == 'bag' -%}
+      .mobile-menu__cart-icon .cart--icon,
+      .mobile-menu__cart-link .cart--icon {
+        display: none;
+      }
+    {%- else -%}
+      .mobile-menu__cart-icon .bag--icon,
+      .mobile-menu__cart-link .bag--icon {
+        display: none;
+      }
+    {%- endif -%}
+  </style>
+
+
+</header>
+
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width_header",
+      "label": "Full width"
+    },
+    {
+      "type": "header",
+      "content": "Announcement Bar"
+    },
+    {
+      "type": "richtext",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "<p>Share a shop announcement or message</p>"
+    },
+    {
+      "type": "range",
+      "id": "announcement_text_size",
+      "min": 12,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 13
+    },
+    {
+      "type": "select",
+      "id": "cart_icon",
+      "label": "Cart icon",
+      "options": [
+        {
+          "value": "cart",
+          "label": "Cart"
+        },
+        {
+          "value": "bag",
+          "label": "Bag"
+        }
+      ],
+      "info": "You can change the text in your edit language section"
+    },
+    {
+      "type": "header",
+      "content": "Language Selector",
+      "info": "To add a language, go to your [language settings.](/admin/settings/languages)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_locale_selector",
+      "label": "Show language selector",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Currency Selector",
+      "info": "To add a currency, go to your [payment settings.](/admin/settings/payments)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_currency_selector",
+      "label": "Show currency selector",
+      "default": false
+    }
+  ],
+  "blocks": []
+}
+{% endschema %}
