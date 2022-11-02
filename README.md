@@ -9,6 +9,12 @@ Impluse 2.0 - https://swamarts.com
 SuperStore 2.0 https://outofthesandbox.com/collections/superstore-theme/products/superstore-theme-interior
 Flow https://hodginsharvest.myshopify.com/
 
+spark {
+store link = https://rawhimalayas.myshopify.com/password
+theme link = https://themes.shopify.com/themes/spark/styles/chic
+
+}
+
 
 
 
